@@ -27,7 +27,7 @@ if "actions" not in st.session_state:
     st.session_state.actions = []
 
 
-def add_factor(category: str, description: str, impact: int, urgency: int):
+def add_factor(category, description, impact, urgency):
     """Lägg till en faktor i angiven kategori."""
     factor = {
         "id": f"{category}_{len(st.session_state.factors[category])}",
@@ -40,7 +40,7 @@ def add_factor(category: str, description: str, impact: int, urgency: int):
     st.session_state.factors[category].append(factor)
 
 
-def remove_factor(category: str, factor_id: str):
+def remove_factor(category, factor_id):
     """Ta bort en faktor."""
     st.session_state.factors[category] = [
         f for f in st.session_state.factors[category] 
@@ -52,7 +52,6 @@ def remove_factor(category: str, factor_id: str):
 with st.sidebar:
     st.header("📁 Sparade analyser")
     
-    # Ladda befintlig analys
     saved = list_analyses()
     if saved:
         selected = st.selectbox("Välj analys", ["-- Ny analys --"] + saved)
@@ -65,7 +64,6 @@ with st.sidebar:
     
     st.divider()
     
-    # Spara nuvarande analys
     analysis_name = st.text_input("Namn på analys")
     if st.button("Spara analys", disabled=not analysis_name):
         save_analysis(analysis_name, {
@@ -76,11 +74,12 @@ with st.sidebar:
     
     st.divider()
     
-    # Rensa allt
     if st.button("🗑️ Rensa allt", type="secondary"):
         st.session_state.factors = {
-            "strengths": [], "weaknesses": [], 
-            "opportunities": [], "threats": []
+            "strengths": [],
+            "weaknesses": [],
+            "opportunities": [],
+            "threats": []
         }
         st.session_state.actions = []
         st.rerun()
@@ -141,19 +140,16 @@ with step1:
         }
     }
     
-    # Visa alla kategorier i två kolumner
     col1, col2 = st.columns(2)
     
     for idx, (category, config) in enumerate(categories.items()):
         with col1 if idx < 2 else col2:
             st.subheader(config["title"])
             
-            # Hjälpfrågor
             with st.expander("💡 Hjälpfrågor"):
                 for q in config["help_questions"]:
                     st.write(f"• {q}")
             
-            # Formulär för ny faktor
             with st.form(key=f"form_{category}"):
                 description = st.text_area(
                     "Beskrivning",
@@ -185,7 +181,6 @@ with step1:
                     else:
                         st.warning("Ange en beskrivning")
             
-            # Lista befintliga faktorer
             for factor in st.session_state.factors[category]:
                 with st.container():
                     fcol1, fcol2 = st.columns([4, 1])
@@ -208,19 +203,16 @@ with step1:
 with step2:
     st.header("Analys")
     
-    # Kontrollera att det finns faktorer
     total_factors = sum(len(f) for f in st.session_state.factors.values())
     
     if total_factors == 0:
         st.info("👆 Lägg till faktorer i steg 1 först.")
     else:
-        # SWOT-matris
         st.subheader("SWOT-matris")
         
         matrix_col1, matrix_col2 = st.columns(2)
         
         with matrix_col1:
-            # Styrkor
             st.markdown("### 💪 Styrkor")
             for f in sorted(
                 st.session_state.factors["strengths"],
@@ -229,7 +221,6 @@ with step2:
             ):
                 st.success(f"**{f['description']}** (Prioritet: {f['priority_score']:.1f})")
             
-            # Svagheter
             st.markdown("### ⚠️ Svagheter")
             for f in sorted(
                 st.session_state.factors["weaknesses"],
@@ -239,7 +230,6 @@ with step2:
                 st.warning(f"**{f['description']}** (Prioritet: {f['priority_score']:.1f})")
         
         with matrix_col2:
-            # Möjligheter
             st.markdown("### 🚀 Möjligheter")
             for f in sorted(
                 st.session_state.factors["opportunities"],
@@ -248,7 +238,6 @@ with step2:
             ):
                 st.info(f"**{f['description']}** (Prioritet: {f['priority_score']:.1f})")
             
-            # Hot
             st.markdown("### 🔴 Hot")
             for f in sorted(
                 st.session_state.factors["threats"],
@@ -259,7 +248,6 @@ with step2:
         
         st.divider()
         
-        # TOWS-analys
         st.subheader("TOWS-korsanalys")
         st.write("Kombinera interna och externa faktorer för strategiska insikter.")
         
@@ -291,13 +279,11 @@ with step2:
         
         st.divider()
         
-        # Prioriteringsdiagram
         st.subheader("Prioriteringsöversikt")
         
         import plotly.express as px
         import pandas as pd
         
-        # Samla alla faktorer för visualisering
         all_factors = []
         category_names = {
             "strengths": "Styrkor",
@@ -340,7 +326,7 @@ with step2:
                 yaxis=dict(range=[0.5, 5.5])
             )
             
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
 
 # ============ STEG 3: ÅTGÄRDER ============
@@ -352,7 +338,6 @@ with step3:
     if total_factors == 0:
         st.info("👆 Lägg till faktorer i steg 1 först.")
     else:
-        # AI-genererade förslag
         st.subheader("🤖 AI-genererade förslag")
         
         api_key = st.text_input(
@@ -381,14 +366,6 @@ with step3:
         
         st.divider()
         
-        # Manuella åtgärder
-        st.subheader("📝 Handlingsplan")
-        
-        with st.form("add_action"):
-            action_desc = st.text_area("Åtgärd", placeholder="Beskriv åtgärden...")
-            
-            action_col1, action_col2, action_col
-        # Manuella åtgärder
         st.subheader("📝 Handlingsplan")
         
         with st.form("add_action"):
@@ -408,7 +385,6 @@ with step3:
                     ["Ej påbörjad", "Pågående", "Klar"]
                 )
             
-            # Koppla till faktorer
             all_factor_options = []
             for category, factors in st.session_state.factors.items():
                 for f in factors:
@@ -452,12 +428,14 @@ with step3:
                     col1, col2, col3, col4 = st.columns([3, 1, 1, 0.5])
                     
                     with col1:
-                        st.write(f"{status_icons.get(action['status'], '⬜')} **{action['description']}**")
+                        icon = status_icons.get(action["status"], "⬜")
+                        st.write(f"{icon} **{action['description']}**")
                         if action["linked_factors"]:
                             st.caption(f"Kopplad till: {', '.join(action['linked_factors'])}")
                     
                     with col2:
-                        st.caption(f"👤 {action['owner'] or 'Ej tilldelad'}")
+                        owner_text = action["owner"] or "Ej tilldelad"
+                        st.caption(f"👤 {owner_text}")
                     
                     with col3:
                         st.caption(f"📅 {action['deadline']}")

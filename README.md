@@ -1,0 +1,2 @@
+# swot-tool
+SWOT-analysverktyg
